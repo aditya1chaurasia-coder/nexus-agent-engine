@@ -1,0 +1,27 @@
+﻿# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Environment Variables & Secrets (CRITICAL)
+.env
+*.env
+backend/.env
+
+# Local Test Files & Logs
+backend/test_run.py
+backend/list_models.py
+*.log
+
+# OS & Editor Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

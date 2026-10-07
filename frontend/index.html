@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexusAgent - Autonomous Multi-Agent Execution Engine</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="brand">
+        <span class="pulse-dot"></span>
+        <h1>Nexus<span>Agent</span></h1>
+        <span class="badge">Multi-Agent Sandbox</span>
+      </div>
+      <div class="status-indicator">
+        <span id="engineStatus" class="status-pill status-ready">Ready</span>
+      </div>
+    </header>
+
+    <main class="main-layout">
+      <!-- Left Panel: Input & Controls -->
+      <section class="control-panel">
+        <div class="card">
+          <h2>Task Objective</h2>
+          <p class="subtitle">Assign a computational, algorithmic, or verification goal for the Coder and Critic agents.</p>
+          
+          <textarea id="goalInput" rows="4" placeholder="e.g., Calculate the first 20 Fibonacci numbers, verify that each is correct, and compute their sum."></textarea>
+          
+          <div class="presets">
+            <span>Presets:</span>
+            <button class="preset-btn" data-preset="Write a script to compute the prime factors of 123456789 and verify that their product equals the original number.">Prime Factors</button>
+            <button class="preset-btn" data-preset="Simulate 1,000 coin tosses, calculate the experimental probability of heads, and compare it with the theoretical 0.5 value.">Monte Carlo Toss</button>
+            <button class="preset-btn" data-preset="Generate an array of 15 random integers, sort them using QuickSort algorithm, verify the result with sorted(), and print steps.">QuickSort Test</button>
+          </div>
+
+          <div class="action-row">
+            <button id="runBtn" class="btn btn-primary">
+              <span id="btnIcon">⚡</span> Run Multi-Agent Loop
+            </button>
+            <button id="clearBtn" class="btn btn-secondary">Clear</button>
+          </div>
+        </div>
+
+        <div class="card agent-cards">
+          <h2>Agent Network</h2>
+          <div class="agent-item" id="coderCard">
+            <div class="agent-avatar coder">C</div>
+            <div class="agent-info">
+              <h3>Coder Agent</h3>
+              <p>Formulates plan & generates executable Python code</p>
+            </div>
+            <span class="agent-status" id="coderStatus">Idle</span>
+          </div>
+
+          <div class="agent-item" id="sandboxCard">
+            <div class="agent-avatar sandbox">S</div>
+            <div class="agent-info">
+              <h3>Execution Sandbox</h3>
+              <p>Isolated OS subprocess runner with timeout guard</p>
+            </div>
+            <span class="agent-status" id="sandboxStatus">Idle</span>
+          </div>
+
+          <div class="agent-item" id="criticCard">
+            <div class="agent-avatar critic">Q</div>
+            <div class="agent-info">
+              <h3>Critic Agent (QA)</h3>
+              <p>Validates stdout/stderr against goal; loops or approves</p>
+            </div>
+            <span class="agent-status" id="criticStatus">Idle</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Live Feed & Terminal -->
+      <section class="display-panel">
+        <div class="terminal-card">
+          <div class="terminal-header">
+            <div class="window-buttons">
+              <span></span><span></span><span></span>
+            </div>
+            <span class="terminal-title">Live Execution Stream</span>
+            <span class="iteration-counter" id="iterationBadge">Iteration: 0</span>
+          </div>
+          <div class="terminal-body" id="terminalFeed">
+            <div class="terminal-placeholder">
+              Ready for dispatch. Provide a goal and click <strong>Run Multi-Agent Loop</strong>.
+            </div>
+          </div>
+        </div>
+
+        <div class="card result-card hidden" id="finalResultCard">
+          <h2>Verified Outcome</h2>
+          <div class="result-content" id="finalResultContent"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
