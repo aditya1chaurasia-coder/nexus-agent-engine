@@ -1,4 +1,4 @@
-﻿const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "http://127.0.0.1:8000";
 
 const goalInput = document.getElementById("goalInput");
 const runBtn = document.getElementById("runBtn");
@@ -109,7 +109,7 @@ runBtn.addEventListener("click", async () => {
 
   eventSource.onerror = (err) => {
     console.error("SSE connection error", err);
-    appendLog("error", "⚡ Connection Terminated", "Event stream disconnected.");
+    appendLog("error", "? Connection Terminated", "Event stream disconnected.");
     eventSource.close();
     finishRun();
   };
@@ -119,29 +119,29 @@ function handleAgentEvent(data, eventSource) {
   const step = data.step;
 
   if (step === "init") {
-    appendLog("coder", "🚀 Initializing Task", data.message);
+    appendLog("coder", "?? Initializing Task", data.message);
   } else if (step === "iteration_start") {
     iterationBadge.textContent = `Iteration: ${data.iteration}`;
   } else if (step === "coder_thinking") {
     setAgentActive("coder");
-    appendLog("coder", "🧠 Coder Agent", data.message);
+    appendLog("coder", "?? Coder Agent", data.message);
   } else if (step === "coder_output") {
-    appendLog("coder", "💡 Coder Strategy", data.thought);
-    appendLog("coder", "📝 Generated Code", data.code, true);
+    appendLog("coder", "?? Coder Strategy", data.thought);
+    appendLog("coder", "?? Generated Code", data.code, true);
   } else if (step === "sandbox_executing") {
     setAgentActive("sandbox");
-    appendLog("sandbox", "⚙️ Execution Sandbox", data.message);
+    appendLog("sandbox", "?? Execution Sandbox", data.message);
   } else if (step === "sandbox_output") {
     const output = `Exit Code: ${data.exit_code}\nStdout: ${data.stdout || "[None]"}\nStderr: ${data.stderr || "[None]"}`;
-    appendLog("sandbox", "📥 Sandbox Feedback", output, true);
+    appendLog("sandbox", "?? Sandbox Feedback", output, true);
   } else if (step === "critic_thinking") {
     setAgentActive("critic");
-    appendLog("critic", "🔍 Critic Review", data.message);
+    appendLog("critic", "?? Critic Review", data.message);
   } else if (step === "critic_output") {
     if (data.approved) {
-      appendLog("success", "✅ Critic Approved", "The executed code successfully satisfied the objective.");
+      appendLog("success", "? Critic Approved", "The executed code successfully satisfied the objective.");
     } else {
-      appendLog("critic", "⚠️ Critique & Revision Needed", data.critique);
+      appendLog("critic", "?? Critique & Revision Needed", data.critique);
     }
   } else if (step === "completed") {
     eventSource.close();
@@ -149,12 +149,12 @@ function handleAgentEvent(data, eventSource) {
     finishRun();
     finalResultCard.classList.remove("hidden");
     finalResultContent.textContent = data.final_answer;
-    appendLog("success", "🏁 Mission Complete", `Resolved cleanly in ${data.iterations} iteration(s).`);
+    appendLog("success", "?? Mission Complete", `Resolved cleanly in ${data.iterations} iteration(s).`);
   } else if (step === "failed" || step === "error") {
     eventSource.close();
     setAgentActive(null);
     finishRun();
-    appendLog("error", "❌ Workflow Stopped", data.message);
+    appendLog("error", "? Workflow Stopped", data.message);
   }
 }
 
