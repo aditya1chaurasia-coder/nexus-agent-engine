@@ -1,14 +1,18 @@
 ﻿import json
 import requests
+import time
+import logging
 from typing import List, Dict, Any
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 class LLMClient:
     """Dispatches chat completions to either Ollama or OpenAI-compatible cloud endpoints."""
     def __init__(self):
         self.provider = settings.provider
 
-    def chat(self, messages: List[Dict[str, str]], json_mode: bool = True) -> str:
+    def chat(self, messages: List[Dict[str, str]], json_mode: bool = True, max_retries: int = 4, base_delay: float = 2.0) -> str:
         if self.provider == "ollama":
             url = f"{settings.ollama_url.rstrip('/')}/api/chat"
             payload = {
@@ -34,11 +38,26 @@ class LLMClient:
             }
             if json_mode:
                 payload["response_format"] = {"type": "json_object"}
-            
-            resp = requests.post(endpoint, json=payload, headers=headers, timeout=60)
-            if resp.status_code != 200:
+
+            for attempt in range(max_retries):
+                resp = requests.post(endpoint, json=payload, headers=headers, timeout=60)
+                if resp.status_code == 200:
+                    return resp.json()["choices"][0]["message"]["content"]
+
+                # Handle rate limits (429) and temporary upstream hiccups (500, 502, 503)
+                if resp.status_code in (429, 500, 502, 503, 504):
+                    if attempt < max_retries - 1:
+                        retry_after = resp.headers.get("Retry-After")
+                        try:
+                            sleep_time = float(retry_after) if retry_after else base_delay * (2 ** attempt)
+                        except (ValueError, TypeError):
+                            sleep_time = base_delay * (2 ** attempt)
+
+                        logger.warning(f"HTTP {resp.status_code} hit. Backing off for {sleep_time:.1f}s (attempt {attempt + 1}/{max_retries})...")
+                        time.sleep(sleep_time)
+                        continue
+
                 raise RuntimeError(f"HTTP {resp.status_code} from {endpoint}: {resp.text}")
-            return resp.json()["choices"][0]["message"]["content"]
 
 CODER_SYSTEM_PROMPT = """You are an expert Python Engineer Agent.
 Your task is to write clean, complete, executable Python code to solve the user's objective.
