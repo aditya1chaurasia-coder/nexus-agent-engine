@@ -44,7 +44,6 @@ class LLMClient:
                 if resp.status_code == 200:
                     return resp.json()["choices"][0]["message"]["content"]
 
-                # Handle rate limits (429) and temporary upstream hiccups (500, 502, 503)
                 if resp.status_code in (429, 500, 502, 503, 504):
                     if attempt < max_retries - 1:
                         retry_after = resp.headers.get("Retry-After")
@@ -65,11 +64,16 @@ Your task is to write clean, complete, executable Python code to solve the user'
 Rules:
 1. Always respond in valid JSON with these keys:
    {
-     "thought": "<reasoning about how to approach or fix the problem>",
+     "thought": "<concise reasoning about how to approach or fix the problem>",
      "code": "<raw, complete python code to execute that prints results to stdout>"
    }
 2. Ensure your code prints all output clearly to standard output.
 3. If previous execution failed, analyze the error feedback and fix it.
+4. STRICT EXECUTION RULES:
+   - All code executes directly via python -c with NO command-line arguments.
+   - NEVER use `sys.argv` or expect external inputs.
+   - Do NOT import missing user files or modules. Embed all mocks, classes, tests, or demo data directly in the script.
+   - Ensure syntactically valid Python without stray brackets.
 """
 
 CRITIC_SYSTEM_PROMPT = """You are a Principal Software Architect and QA Critic.
@@ -80,7 +84,7 @@ Rules:
 2. Always respond in valid JSON with these keys:
    {
      "approved": true/false,
-     "critique": "<feedback on what failed or needs fixing; empty if approved>",
+     "critique": "<concise feedback on what failed or needs fixing; empty if approved>",
      "final_answer": "<clear, comprehensive final explanation if approved; empty if not approved>"
    }
 """
@@ -101,12 +105,16 @@ class CriticAgent:
         self.llm = llm
 
     def evaluate(self, goal: str, code: str, stdout: str, stderr: str, exit_code: int) -> Dict[str, Any]:
+        trimmed_code = code[:2000] + "\n# ...[code trimmed for length]" if len(code) > 2000 else code
+        trimmed_stdout = stdout[:1000] + "\n...[stdout trimmed]" if len(stdout) > 1000 else stdout
+        trimmed_stderr = stderr[:1000] + "\n...[stderr trimmed]" if len(stderr) > 1000 else stderr
+
         prompt = (
             f"User Goal: {goal}\n\n"
-            f"Executed Code:\n{code}\n\n"
+            f"Executed Code:\n{trimmed_code}\n\n"
             f"Execution Exit Code: {exit_code}\n"
-            f"Stdout:\n{stdout}\n"
-            f"Stderr:\n{stderr}\n\n"
+            f"Stdout:\n{trimmed_stdout}\n"
+            f"Stderr:\n{trimmed_stderr}\n\n"
             f"Evaluate if this solves the user goal cleanly and without errors."
         )
         messages = [

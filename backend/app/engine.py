@@ -25,10 +25,11 @@ class MultiAgentEngine:
             iteration += 1
             yield {"step": "iteration_start", "iteration": iteration}
 
-            # 1. Coder generates code
+            # 1. Coder generates code (send sliding window of history to avoid TPM limits)
             yield {"step": "coder_thinking", "message": "Coder Agent is analyzing the task..."}
             try:
-                coder_decision = self.coder.generate_code(goal, iteration_history)
+                active_history = iteration_history[-2:] if len(iteration_history) > 2 else iteration_history
+                coder_decision = self.coder.generate_code(goal, active_history)
             except Exception as e:
                 yield {"step": "error", "message": f"Coder failed to generate JSON: {str(e)}"}
                 break
@@ -78,12 +79,15 @@ class MultiAgentEngine:
                 }
                 return
 
-            # Feed the critique back to the coder for self-healing
+            # Compact the feedback so token consumption stays low
+            trimmed_stdout = stdout[-500:] if len(stdout) > 500 else stdout
+            trimmed_stderr = stderr[-500:] if len(stderr) > 500 else stderr
             feedback_msg = (
-                f"Iteration {iteration} Feedback:\n"
-                f"Code:\n{code}\n"
-                f"Stdout: {stdout}\nStderr: {stderr} (Exit: {exit_code})\n"
-                f"Critic Feedback: {critique}\nPlease fix the issues and write revised code."
+                f"Iteration {iteration} Failed (Exit {exit_code}):\n"
+                f"Stdout tail: {trimmed_stdout}\n"
+                f"Stderr tail: {trimmed_stderr}\n"
+                f"Critic instructions: {critique}\n"
+                f"Fix these specific issues in your revised code."
             )
             iteration_history.append({"role": "user", "content": feedback_msg})
 
